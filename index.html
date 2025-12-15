@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Mitokondri Oyunu</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+    font-family:"Segoe UI",sans-serif;
+    background:linear-gradient(135deg,#74ebd5,#9face6);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+.box{
+    background:#fff;
+    width:760px;
+    padding:25px;
+    border-radius:16px;
+    box-shadow:0 15px 30px rgba(0,0,0,.25);
+    position:relative;
+    overflow:hidden;
+    animation:fadeIn 1s;
+}
+.box::after{
+    content:"";
+    position:absolute;
+    inset:-50%;
+    background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,.4),transparent 70%);
+    animation:shine 6s infinite;
+}
+h1,h2{color:#333}
+p{font-size:17px;line-height:1.6}
+
+button{
+    padding:12px 22px;
+    font-size:16px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    background:linear-gradient(45deg,#4CAF50,#2e8b57);
+    color:#fff;
+    transition:.3s;
+}
+button:hover{transform:scale(1.05)}
+
+.option{
+    display:block;
+    width:100%;
+    margin:10px 0;
+    background:linear-gradient(45deg,#2196F3,#1e88e5);
+}
+.option.correct{background:#4CAF50}
+.option.wrong{background:#e53935;animation:shake .3s}
+
+#top-bar{
+    display:flex;
+    justify-content:space-between;
+    font-weight:bold;
+}
+#progress{
+    height:10px;
+    background:#ddd;
+    border-radius:5px;
+    overflow:hidden;
+    margin:15px 0;
+}
+#progress-bar{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,#4CAF50,#00c853);
+    transition:.5s;
+}
+#feedback{height:25px;font-weight:bold}
+
+/* YAPIMCI */
+#creator{
+    margin-top:20px;
+    padding-top:10px;
+    border-top:1px solid #ddd;
+    font-size:15px;
+    text-align:center;
+    color:#555;
+    opacity:0;
+    animation:creatorFade 2s forwards;
+}
+@keyframes creatorFade{
+    to{opacity:1}
+}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1}}
+@keyframes shine{from{transform:translateX(-100%) rotate(25deg)}to{transform:translateX(100%) rotate(25deg)}}
+@keyframes shake{
+    0%{transform:translateX(0)}
+    25%{transform:translateX(-6px)}
+    50%{transform:translateX(6px)}
+    75%{transform:translateX(-6px)}
+    100%{transform:translateX(0)}
+}
+@keyframes fall{
+    to{transform:translateY(100vh) rotate(360deg);opacity:0}
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+
+<!-- ÖĞRENME -->
+<div id="learn">
+<h1>🧠 Mitokondriyi Öğrenelim</h1>
+<p><b>Mitokondri</b>, ATP üreterek hücreye enerji sağlar.</p>
+<p>
+⚡ Çift zarlıdır<br>
+⚡ İç zar kıvrımlarına <b>krista</b> denir<br>
+⚡ İç kısmına <b>matrix</b> denir<br>
+⚡ Kendi DNA’sı vardır<br>
+⚡ Oksijenli solunum yapar
+</p>
+<button onclick="startGame()">Oyuna Başla ▶</button>
+</div>
+
+<!-- OYUN -->
+<div id="game" style="display:none">
+<div id="top-bar">
+<span id="timer">⏱ 15</span>
+<span id="score">Puan: 0</span>
+</div>
+
+<div id="progress"><div id="progress-bar"></div></div>
+
+<h2 id="question"></h2>
+
+<button class="option" onclick="checkAnswer(0)" id="opt0"></button>
+<button class="option" onclick="checkAnswer(1)" id="opt1"></button>
+<button class="option" onclick="checkAnswer(2)" id="opt2"></button>
+<button class="option" onclick="checkAnswer(3)" id="opt3"></button>
+
+<div id="feedback"></div>
+</div>
+
+<!-- SONUÇ -->
+<div id="result" style="display:none">
+<h2>🏆 Oyun Bitti!</h2>
+<p id="finalScore"></p>
+
+<div id="creator">
+Yapımcı: <b>MUSTAFA EFE CAN</b> ve <b>MUHAMMET EFE SAL</b>
+</div>
+
+<button onclick="location.reload()">Tekrar Oyna 🔄</button>
+</div>
+
+</div>
+
+<script>
+const questions=[
+{q:"Mitokondrinin temel görevi nedir?",options:["Protein üretimi","ATP üretimi","Depolama","Hücre bölünmesi"],answer:1},
+{q:"Mitokondri hangi hücrede bulunmaz?",options:["Bitki","Hayvan","Mantar","Bakteri"],answer:3},
+{q:"İç zarın kıvrımlarına ne denir?",options:["Matrix","Krista","Ribozom","Lizozom"],answer:1},
+{q:"Mitokondri için hangisi doğrudur?",options:["Tek zarlıdır","DNA’sı yoktur","Oksijenli solunum yapar","Protein üretir"],answer:2},
+{q:"Enerji ihtiyacı fazla hücrede ne fazladır?",options:["Lizozom","Mitokondri","Koful","Ribozom"],answer:1},
+{q:"Mitokondrinin iç sıvısına ne ad verilir?",options:["Krista","Stroma","Matrix","Sitoplazma"],answer:2},
+{q:"Mitokondride aşağıdakilerden hangisi bulunur?",options:["Hücre duvarı","Kendi DNA’sı","Klorofil","Sentrozom"],answer:1},
+{q:"Çift zarlı yapı neyi artırır?",options:["Protein sentezi","Enerji üretim yüzeyi","Depolama","Fotosentez"],answer:1},
+{q:"Oksijenli solunumun çoğu nerede olur?",options:["Çekirdek","Ribozom","Mitokondri","Lizozom"],answer:2},
+{q:"Kas hücrelerinde mitokondri neden fazladır?",options:["Bölünme","Depolama","Enerji ihtiyacı","Protein sentezi"],answer:2}
+];
+
+let i=0,score=0,time=15,timer;
+const correctSound=new Audio("https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3");
+const wrongSound=new Audio("https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3");
+
+function startGame(){
+    learn.style.display="none";
+    game.style.display="block";
+    loadQuestion();startTimer();
+}
+function startTimer(){
+    time=15;timerEl.innerText="⏱ "+time;
+    timer=setInterval(()=>{
+        time--;timerEl.innerText="⏱ "+time;
+        if(time===0){clearInterval(timer);next();}
+    },1000);
+}
+function loadQuestion(){
+    let q=questions[i];
+    question.innerText=q.q;
+    q.options.forEach((o,x)=>{
+        let b=document.getElementById("opt"+x);
+        b.innerText=o;b.className="option";
+    });
+    feedback.innerText="";
+    progressBar.style.width=(i/questions.length)*100+"%";
+}
+function checkAnswer(c){
+    clearInterval(timer);
+    let correct=questions[i].answer;
+    if(c===correct){
+        score+=10;correctSound.play();confetti();
+        feedback.innerText="✅ Doğru!";
+    }else{
+        wrongSound.play();
+        document.getElementById("opt"+c).classList.add("wrong");
+        document.getElementById("opt"+correct).classList.add("correct");
+        feedback.innerText="❌ Yanlış!";
+    }
+    scoreEl.innerText="Puan: "+score;
+    setTimeout(next,1200);
+}
+function next(){
+    i++;
+    if(i>=questions.length) end();
+    else{loadQuestion();startTimer();}
+}
+function end(){
+    game.style.display="none";
+    result.style.display="block";
+    let level=score>=80?"🧠 Mitokondri Uzmanı":score>=50?"⚡ Enerji Mühendisi":"🔁 Tekrar Etmelisin";
+    finalScore.innerText="Toplam Puan: "+score+"\n"+level;
+}
+function confetti(){
+    for(let x=0;x<25;x++){
+        let d=document.createElement("div");
+        d.style.cssText=`position:fixed;top:-10px;left:${Math.random()*100}%;
+        width:8px;height:8px;background:hsl(${Math.random()*360},100%,50%);
+        animation:fall 2s linear;border-radius:50%`;
+        document.body.appendChild(d);
+        setTimeout(()=>d.remove(),2000);
+    }
+}
+
+const learn=document.getElementById("learn");
+const game=document.getElementById("game");
+const result=document.getElementById("result");
+const question=document.getElementById("question");
+const feedback=document.getElementById("feedback");
+const scoreEl=document.getElementById("score");
+const timerEl=document.getElementById("timer");
+const progressBar=document.getElementById("progress-bar");
+const finalScore=document.getElementById("finalScore");
+</script>
+
+</body>
+</html>
